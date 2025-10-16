@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание Лагеря</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .event-card {
+            transition: all 0.3s ease;
+        }
+        
+        .event-card.past {
+            opacity: 0.4;
+        }
+        
+        .event-card.active {
+            transform: scale(1.01);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        .day-hidden {
+            display: none;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.6); }
+        }
+        
+        .active-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+    <div class="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">
+                Расписание Лагеря
+            </h1>
+            <p class="text-base text-gray-600">17-19 октября 2025</p>
+        </header>
+
+        <!-- Schedule Container (will be generated dynamically) -->
+        <div id="schedule-container"></div>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm mt-10">
+            <p>Расписание обновляется автоматически</p>
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================
+        // РАСПИСАНИЕ - РЕДАКТИРУЙТЕ ЗДЕСЬ
+        // ==========================================
+        const SCHEDULE = {
+            days: [
+                {
+                    id: 'friday',
+                    date: '2025-10-17',
+                    title: 'Пятница, 17 октября',
+                    color: 'indigo', // indigo, purple, pink
+                    events: [
+                        {
+                            timeStart: '19:00',
+                            timeEnd: '20:00',
+                            timeDisplay: '19:00',
+                            title: 'Заезд, размещение'
+                        },
+                        {
+                            timeStart: '20:00',
+                            timeEnd: '21:00',
+                            timeDisplay: '20:00',
+                            title: 'Ужин'
+                        },
+                        {
+                            timeStart: '21:00',
+                            timeEnd: '22:00',
+                            timeDisplay: '21:00',
+                            title: 'Приветственная встреча, знакомство'
+                        },
+                        {
+                            timeStart: '22:00',
+                            timeEnd: '23:59',
+                            timeDisplay: '22:00',
+                            title: 'Ночная иммерсивная экскурсия к Белой Церкви',
+                            note: 'Одевайтесь тепло и в непромокаемую обувь, будем гулять по лесу и мокрой траве',
+                            noteType: 'important' // important, info, tip
+                        }
+                    ]
+                },
+                {
+                    id: 'saturday',
+                    date: '2025-10-18',
+                    title: 'Суббота, 18 октября',
+                    color: 'purple',
+                    events: [
+                        {
+                            timeStart: '09:30',
+                            timeEnd: '10:00',
+                            timeDisplay: '09:30',
+                            title: 'Зарядка на природе'
+                        },
+                        {
+                            timeStart: '10:00',
+                            timeEnd: '10:30',
+                            timeDisplay: '10:00',
+                            title: 'Завтрак'
+                        },
+                        {
+                            timeStart: '10:30',
+                            timeEnd: '11:00',
+                            timeDisplay: '10:30',
+                            title: 'Официальное открытие лагеря и знакомство'
+                        },
+                        {
+                            timeStart: '11:00',
+                            timeEnd: '12:30',
+                            timeDisplay: '11:00',
+                            title: 'Экскурсия по Арт-парку',
+                            note: 'Одевайтесь тепло и в непромокаемую обувь, будем гулять по лесу и мокрой траве',
+                            noteType: 'important'
+                        },
+                        {
+                            timeStart: '12:30',
+                            timeEnd: '14:00',
+                            timeDisplay: '12:30',
+                            title: 'Свободное время, погулять по лесу, пообщаться'
+                        },
+                        {
+                            timeStart: '14:00',
+                            timeEnd: '15:30',
+                            timeDisplay: '14:00',
+                            title: 'Обед'
+                        },
+                        {
+                            timeStart: '15:30',
+                            timeEnd: '17:30',
+                            timeDisplay: '15:30',
+                            title: 'Групповая игра',
+                            note: 'Одевайтесь просто удобно. Будем в крытом помещении',
+                            noteType: 'info'
+                        },
+                        {
+                            timeStart: '17:30',
+                            timeEnd: '18:30',
+                            timeDisplay: '17:30',
+                            title: 'Встречаем закат вместе если погода позволит, либо балдеем у камина'
+                        },
+                        {
+                            timeStart: '18:30',
+                            timeEnd: '20:00',
+                            timeDisplay: '18:30',
+                            title: 'Ужин'
+                        },
+                        {
+                            timeStart: '20:00',
+                            timeEnd: '22:00',
+                            timeDisplay: '20:00',
+                            title: 'Дискотэка',
+                            note: 'После ужина у вас будет время нарядиться, поэтому надевайте свой лучший наряд',
+                            noteType: 'tip'
+                        },
+                        {
+                            timeStart: '22:00',
+                            timeEnd: '23:59',
+                            timeDisplay: '22:00',
+                            title: 'Вечерний огонек'
+                        }
+                    ]
+                },
+                {
+                    id: 'sunday',
+                    date: '2025-10-19',
+                    title: 'Воскресенье, 19 октября',
+                    color: 'pink',
+                    events: [
+                        {
+                            timeStart: '09:30',
+                            timeEnd: '10:00',
+                            timeDisplay: '09:30',
+                            title: 'Завершающая зарядка'
+                        },
+                        {
+                            timeStart: '10:00',
+                            timeEnd: '11:00',
+                            timeDisplay: '10:00',
+                            title: 'Завтрак'
+                        },
+                        {
+                            timeStart: '11:00',
+                            timeEnd: '12:30',
+                            timeDisplay: '11:00',
+                            title: 'Официальное закрытие лагеря'
+                        },
+                        {
+                            timeStart: '12:30',
+                            timeEnd: '14:00',
+                            timeDisplay: '12:30',
+                            title: 'Обед и отъезд'
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // ==========================================
+        // ГЕНЕРАЦИЯ HTML
+        // ==========================================
+        function generateScheduleHTML() {
+            const container = document.getElementById('schedule-container');
+            
+            SCHEDULE.days.forEach(day => {
+                const daySection = document.createElement('div');
+                daySection.id = `day-${day.id}`;
+                daySection.className = 'mb-8';
+                
+                // Day header
+                const colorMap = {
+                    indigo: { line: 'indigo-300', text: 'indigo-600', bg: 'indigo-100', textColor: 'indigo-700', border: 'indigo-100' },
+                    purple: { line: 'purple-300', text: 'purple-600', bg: 'purple-100', textColor: 'purple-700', border: 'purple-100' },
+                    pink: { line: 'pink-300', text: 'pink-600', bg: 'pink-100', textColor: 'pink-700', border: 'pink-100' }
+                };
+                const colors = colorMap[day.color];
+                
+                daySection.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-${colors.line} to-transparent"></div>
+                        <h2 class="text-xl md:text-2xl font-bold text-${colors.text} px-4">
+                            ${day.title}
+                        </h2>
+                        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-${colors.line} to-transparent"></div>
+                    </div>
+                `;
+                
+                // Events container
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'space-y-2';
+                
+                day.events.forEach(event => {
+                    const eventCard = document.createElement('div');
+                    eventCard.className = `event-card bg-white rounded-xl p-4 shadow-lg border border-${colors.border}`;
+                    eventCard.setAttribute('data-date', day.date);
+                    eventCard.setAttribute('data-time-start', event.timeStart);
+                    eventCard.setAttribute('data-time-end', event.timeEnd);
+                    
+                    // Note styling
+                    const noteStyles = {
+                        important: { bg: 'red-50', border: 'red-400', text: 'red-700', prefix: '‼️ Важно:' },
+                        info: { bg: 'blue-50', border: 'blue-400', text: 'blue-700', prefix: '' },
+                        tip: { bg: `${day.color}-50`, border: `${day.color}-400`, text: `${day.color}-700`, prefix: '' }
+                    };
+                    
+                    let noteHTML = '';
+                    if (event.note) {
+                        const noteStyle = noteStyles[event.noteType] || noteStyles.info;
+                        const prefix = noteStyle.prefix ? `<span class="font-semibold">${noteStyle.prefix}</span> ` : '';
+                        noteHTML = `
+                            <div class="bg-${noteStyle.bg} border-l-4 border-${noteStyle.border} p-3 rounded">
+                                <p class="text-xs text-${noteStyle.text}">
+                                    ${prefix}${event.note}
+                                </p>
+                            </div>
+                        `;
+                    }
+                    
+                    const mbClass = event.note ? ' mb-3' : '';
+                    
+                    eventCard.innerHTML = `
+                        <div class="flex items-start gap-3${mbClass}">
+                            <div class="flex-shrink-0">
+                                <div class="bg-${colors.bg} text-${colors.textColor} rounded-lg px-3 py-1.5 font-semibold text-xs">
+                                    ${event.timeDisplay}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-gray-800">${event.title}</h3>
+                            </div>
+                        </div>
+                        ${noteHTML}
+                    `;
+                    
+                    eventsContainer.appendChild(eventCard);
+                });
+                
+                daySection.appendChild(eventsContainer);
+                container.appendChild(daySection);
+            });
+        }
+
+        // ==========================================
+        // ЛОГИКА ОБНОВЛЕНИЯ СОСТОЯНИЯ
+        // ==========================================
+        let hasScrolledToActive = false;
+
+        function updateSchedule() {
+            const now = new Date();
+
+            // Get all event cards
+            const eventCards = document.querySelectorAll('.event-card');
+            let activeCard = null;
+
+            eventCards.forEach(card => {
+                const dateStr = card.getAttribute('data-date');
+                const timeStart = card.getAttribute('data-time-start');
+                const timeEnd = card.getAttribute('data-time-end');
+
+                // Parse event datetime
+                const [startHour, startMinute] = timeStart.split(':').map(Number);
+                const eventStart = new Date(dateStr);
+                eventStart.setHours(startHour, startMinute, 0);
+
+                const [endHour, endMinute] = timeEnd.split(':').map(Number);
+                const eventEnd = new Date(dateStr);
+                eventEnd.setHours(endHour, endMinute, 0);
+
+                // Check if event is active, past, or future
+                if (now >= eventStart && now < eventEnd) {
+                    // Active event
+                    card.classList.remove('past');
+                    card.classList.add('active', 'active-pulse');
+                    card.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    card.style.color = 'white';
+                    
+                    // Update text colors for active card
+                    const timeBadge = card.querySelector('div[class*="bg-"]');
+                    if (timeBadge) {
+                        timeBadge.className = 'bg-white/20 text-white rounded-lg px-3 py-1.5 font-semibold text-xs backdrop-blur-sm';
+                    }
+                    
+                    const heading = card.querySelector('h3');
+                    if (heading) {
+                        heading.classList.remove('text-gray-800');
+                        heading.classList.add('text-white');
+                    }
+
+                    activeCard = card;
+                } else if (now >= eventEnd) {
+                    // Past event
+                    card.classList.add('past');
+                    card.classList.remove('active', 'active-pulse');
+                    card.style.background = '';
+                    card.style.color = '';
+                    
+                    // Reset styling for past events
+                    const heading = card.querySelector('h3');
+                    if (heading) {
+                        heading.classList.add('text-gray-800');
+                        heading.classList.remove('text-white');
+                    }
+                } else {
+                    // Future event
+                    card.classList.remove('past', 'active', 'active-pulse');
+                    card.style.background = '';
+                    card.style.color = '';
+                    
+                    // Reset styling
+                    const heading = card.querySelector('h3');
+                    if (heading) {
+                        heading.classList.add('text-gray-800');
+                        heading.classList.remove('text-white');
+                    }
+                }
+            });
+
+            // Scroll to active event if exists
+            if (activeCard && !hasScrolledToActive) {
+                setTimeout(() => {
+                    activeCard.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    hasScrolledToActive = true;
+                }, 500);
+            }
+
+            // Reset scroll flag if no active event (allows scrolling to next event)
+            if (!activeCard) {
+                hasScrolledToActive = false;
+            }
+
+            // Hide days that have completely passed
+            hidePastDays();
+        }
+
+        function hidePastDays() {
+            const now = new Date();
+            
+            SCHEDULE.days.forEach(day => {
+                const dayEnd = new Date(day.date);
+                dayEnd.setHours(23, 59, 59);
+                
+                const dayElement = document.getElementById(`day-${day.id}`);
+                if (dayElement) {
+                    if (now > dayEnd) {
+                        dayElement.classList.add('day-hidden');
+                    } else {
+                        dayElement.classList.remove('day-hidden');
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // ==========================================
+        generateScheduleHTML();
+        updateSchedule();
+        setInterval(updateSchedule, 30000);
+    </script>
+</body>
+</html>
